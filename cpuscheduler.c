@@ -5,7 +5,7 @@
 FILE *inp_fptr;
 FILE *out_fptr;
 char myString[100];
-char *sc_method[]={"NONE","FCFS","SJF","PS","RRS"};
+char *sc_method[]={"NONE","FCFS","SJF","PS","RRS"};      //initiating a string array to hold scheduling methods
 char *mode[]={"OFF", "ON"};
 int option_choice;
 int sch_choice;
@@ -101,6 +101,8 @@ void menu(){
                default:
                   printf("Please select the correct option");
                   printf("\n");
+                  exit(0);
+
             }
             break;
 
@@ -129,6 +131,7 @@ void menu(){
                default:
                   printf("Please put in the correct option");
                   printf("\n");
+                  exit(0);
             }
             break;
 
@@ -146,6 +149,7 @@ void menu(){
             default:
             printf("Please select the correct option");
             printf("\n");
+            exit(0);
       }
 
 }
