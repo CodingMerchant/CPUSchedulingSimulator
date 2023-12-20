@@ -1,31 +1,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> 
 
 FILE *inp_fptr;
 FILE *out_fptr;
 char myString[100];
 char *sc_method[]={"NONE","FCFS","SJF","PS","RRS"};      //initiating a string array to hold scheduling methods
 char *mode[]={"OFF", "ON"};
-int option_choice;
+char *inp_data;
+int menu_option;
 int sch_choice;
 int mode_option;
 int time_quan;
 
 char method_choice[] = "NONE";
 char mode_choice[] = "OFF";
-/*void PrintFile(const char *Filepath){      
+
+void PrintFile(const char *InputPath, const char *OutputPath){      
         // Open a file in read mode
-        inp_fptr = fopen(Filepath, "r");
+        inp_fptr = fopen(InputPath, "r");
         // Store the content of the file
+        out_fptr =  fopen(OutputPath, "a");
 
         while(fgets(myString, 100, inp_fptr)){
         // Print the file content
         printf("%s", myString);
+      
+        fprintf(out_fptr,"%s", myString);
+   
         }
-        fclose(inp_fptr);
-}
+        fprintf(out_fptr, "\n");
 
+        fclose(inp_fptr);
+        fclose(out_fptr);
+}
+/*
 void AppendFile(const char *OutputPath){
         
       //Open a file in append mode
@@ -36,8 +46,7 @@ void AppendFile(const char *OutputPath){
 
         //Close the file
         fclose(out_fptr);
-}
-*/
+}*/
 
 void menu(){
    printf("\nCPU SCHEDULER SIMULATOR\n\n");
@@ -46,9 +55,9 @@ void menu(){
       printf("3  |  SHOW RESULT\n");
       printf("4  |  END PROGRAM\n\n");
       printf("OPTION >> ");
-      scanf("%d", &option_choice);     //getting the option as an integer from the user
+      scanf("%d", &menu_option);     //getting the option as an integer from the user
 
-      switch(option_choice){
+      switch(menu_option){
          case 1:
             printf("\nSCHEDULING METHOD\n");
             printf("----Please select what scheduling method you wish to implement----\n\n");
@@ -136,9 +145,10 @@ void menu(){
             break;
 
          case 3:
-            printf("Show result was selected");
+            printf("Scheduling would be done here based on the scheduling method selected and preemptive mode");
             printf("\n");
-            menu();
+            PrintFile("Input.txt","Output.txt");
+
             break;
 
          case 4:
@@ -153,9 +163,30 @@ void menu(){
       }
 
 }
-int main()
+int main(int argc, char *argv[])
 {
+   int opt; 
+      
+    // put ':' in the starting of the 
+    // string so that program can  
+    //distinguish between '?' and ':'  
+    while((opt = getopt(argc, argv, "fo:")) != -1)  
+    {  
+        switch(opt)  
+        {  
+            case 'f':
+               printf("filename: %s\n", optarg);  
+               break;  
+            case 'o':  
+                printf("output: %s\n", optarg);  
+                break;  
+                
+            default:
+                printf("unknown option: %c\n", optopt);
+                break;
+        }  
+    }  
    menu();
-
+   
    exit(0);
 }
