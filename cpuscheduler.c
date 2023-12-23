@@ -35,20 +35,8 @@ void PrintFile(const char *InputPath, const char *OutputPath){
         fclose(inp_fptr);
         fclose(out_fptr);
 }
-/*
-void AppendFile(const char *OutputPath){
-        
-      //Open a file in append mode
-      out_fptr =  fopen(OutputPath, "a");
-      
-      //Prints the last line in myString to the output file
-      fprintf(out_fptr, myString);
 
-        //Close the file
-        fclose(out_fptr);
-}*/
-
-void menu(){
+void menu(const char *InpPath, const char *OutPath){
    printf("\nCPU SCHEDULER SIMULATOR\n\n");
       printf("1  |  SCHEDULING METHOD (%s)\n",method_choice);
       printf("2  |  PREEMPTIVE MODE (%s)\n",mode_choice);
@@ -74,28 +62,28 @@ void menu(){
                   strcpy(method_choice,sc_method[0]);       //updating the value of method_choice to the selected choice of the user
                   printf("%s", method_choice);
                   printf("\nNo scheduling method was selected\n\n");
-                  menu();                                   //rerunning the menu so the user can continue execution of the program
+                  menu(InpPath,OutPath);                                   //rerunning the menu so the user can continue execution of the program
                   break;
 
                case 2:
                   strcpy(method_choice,sc_method[1]);
                   printf("%s", method_choice);
                   printf("\nFirst come first serve was selected\n\n");
-                  menu();
+                  menu(InpPath,OutPath);
                   break;
 
                case 3:
                   strcpy(method_choice,sc_method[2]);
                   printf("%s", method_choice);
                   printf("\nShortest job first was selected\n\n");
-                  menu();
+                  menu(InpPath,OutPath);
                   break;
 
                case 4:
                   strcpy(method_choice,sc_method[3]);
                   printf("%s", method_choice);
                   printf("\nPriority scheduling method was selected\n\n");
-                  menu();
+                  menu(InpPath,OutPath);
                   break;
 
                case 5:
@@ -104,7 +92,7 @@ void menu(){
                   strcpy(method_choice,sc_method[4]);
                   printf("%s", method_choice);
                   printf("\nRound robin scheduling was selected with time quantum as %d\n",time_quan);
-                  menu();
+                  menu(InpPath,OutPath);
                   break;
 
                default:
@@ -127,14 +115,14 @@ void menu(){
                   strcpy(mode_choice,mode[0]);
                   printf("%s", mode_choice);
                   printf("\nPreemptive mode is turned OFF\n\n");
-                  menu();
+                  menu(InpPath,OutPath);
                   break;
 
                case 2:
                   strcpy(mode_choice,mode[1]);
                   printf("%s", mode_choice);
                   printf("\nPreemptive mode is turned ON\n\n");
-                  menu();
+                  menu(InpPath,OutPath);
                   break;
 
                default:
@@ -147,7 +135,7 @@ void menu(){
          case 3:
             printf("Scheduling would be done here based on the scheduling method selected and preemptive mode");
             printf("\n");
-            PrintFile("Input.txt","Output.txt");
+            PrintFile(InpPath,OutPath);
 
             break;
 
@@ -163,30 +151,32 @@ void menu(){
       }
 
 }
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) 
+//argc is the number of arguments, 1 by default if no arguments are passed
+//argv is a pointer to an array of strings
 {
-   int opt; 
-      
-    // put ':' in the starting of the 
-    // string so that program can  
-    //distinguish between '?' and ':'  
-    while((opt = getopt(argc, argv, "fo:")) != -1)  
-    {  
-        switch(opt)  
-        {  
-            case 'f':
-               printf("filename: %s\n", optarg);  
-               break;  
-            case 'o':  
-                printf("output: %s\n", optarg);  
-                break;  
-                
-            default:
-                printf("unknown option: %c\n", optopt);
-                break;
-        }  
-    }  
-   menu();
-   
+
+   char *InputPath;
+   char *OutputPath;
+   int opt;
+
+   while ((opt = getopt(argc, argv, "fo:")) != -1) { //allowing f and o as options requiring arguments
+        switch (opt) {
+        case 'f':
+            InputPath = argv[2];
+            break;
+
+        case 'o':
+            OutputPath = argv[4];
+            break;
+
+        default: /* What to do when an unknown argument is used */
+            fprintf(stderr, "Please input the correct arguments\n");
+            exit(EXIT_FAILURE);
+        }
+   }
+   menu(InputPath,OutputPath);  //run the menu using the InputPath and OutputPath gotten as argument from user
+
    exit(0);
 }
+
