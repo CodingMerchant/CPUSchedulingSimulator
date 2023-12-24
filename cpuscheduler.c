@@ -5,27 +5,36 @@
 
 FILE *inp_fptr;
 FILE *out_fptr;
-char myString[100];
+char myString[10];
 char *sc_method[]={"NONE","FCFS","SJF","PS","RRS"};      //initiating a string array to hold scheduling methods
 char *mode[]={"OFF", "ON"};
 char *inp_data;
+char *token;
 int menu_option;
 int sch_choice;
 int mode_option;
 int time_quan;
+int size;
+int bur;
+int arr;
+int prior;
+int p_id = 0;
+int wait_time = 0;
+float total_wait_time = 0.0;
+float avg_wait_time = 0.0;
+int bur_wait = 0;
+int i;
 
 char method_choice[] = "NONE";
 char mode_choice[] = "OFF";
 
 void split_arr(char *myString){
-   printf("\n%s", myString);
-
       // Returns first token 
-      char *token = strtok(myString, ":"); 
+      token = strtok(myString, ":"); 
 
-      int size=atoi(token);
+      size=atoi(token);
       int signal[size];
-      int i=0;
+      i=0;
 
       // Keep reading tokens while one of the delimiters still present in myString[]. 
       while (token != NULL) 
@@ -37,11 +46,9 @@ void split_arr(char *myString){
          }
       } 
 
-      int bur = size;
-      int arr = signal[0];
-      int prior = signal[1];
-
-      printf("%d | %d | %d", bur,arr,prior);
+      bur = size;
+      arr = signal[0];
+      prior = signal[1];
 
 }
 
@@ -54,16 +61,37 @@ void FCFS_sch(const char *InputPath, const char *OutputPath){
       inp_fptr = fopen(InputPath, "r");
       // Store the content of the file
       out_fptr =  fopen(OutputPath, "a");
-      while(fgets(myString, 100, inp_fptr)){
+      printf("Scheduling Method: First Come First Serve - Non Preemptive\n");
+      fprintf(out_fptr, "\nScheduling Method: First Come First Serve - Non Preemptive\n");
+      printf("Process Waiting Times:");
+      fprintf(out_fptr, "Process Waiting Times:");
+      while(fgets(myString, 10, inp_fptr)){ //Loop through the input file
       // Print the file content
       split_arr(myString);
+      arr=0; //Arrival time not needed
+      prior=0; //Priority not needed
 
+      wait_time = bur_wait + wait_time; //Calculating the wait time for current process
+
+      printf("\nP%d: %d ms", p_id+1,wait_time); //Printing the process names(p1, p2, p3) with wait times
+      fprintf(out_fptr, "\nP%d: %d ms", p_id+1,wait_time);
+
+
+      total_wait_time = total_wait_time + wait_time;
+
+      //printf("\n%d | %d | %d", bur,arr,prior);
+      bur_wait = bur; //setting bur_wait to hold value of current process to calculate wait time of next process
+      p_id++;
       //fprintf(out_fptr,"%s", myString);
       }
+
+      avg_wait_time = total_wait_time/p_id;
+      printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
+      fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
+
       //fprintf(out_fptr, "\n");
       fclose(inp_fptr);
       fclose(out_fptr);
-      printf("\nFirst Come First Serve Non Preemptive Code segment\n");
    } else{
       //Run code for preemptive mode for FCFS
       printf("First Come First Serve does not support Preemptive mode.\n");
@@ -107,7 +135,7 @@ void PrintFile(const char *InputPath, const char *OutputPath){
         // Store the content of the file
         out_fptr =  fopen(OutputPath, "a");
 
-        while(fgets(myString, 100, inp_fptr)){
+        while(fgets(myString, 10, inp_fptr)){
         // Print the file content
         printf("%s", myString);
       
@@ -222,6 +250,7 @@ void menu(const char *InpPath, const char *OutPath){
             
             scanf(" %c", &exit_option);  
             if(exit_option == 'y' || exit_option == 'Y') {
+               //Print the content of Output.txt to the screen here
                printf("\nProgram ended\n");
                exit(0);
             } else if (exit_option == 'n' || exit_option == 'N'){
