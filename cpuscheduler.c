@@ -25,12 +25,18 @@ float avg_wait_time = 0.0;
 int bur_wait = 0;
 int i;
 
+struct list {
+    char *string;
+    struct list *next;
+};
+typedef struct list LIST;
+
 char method_choice[] = "NONE";
 char mode_choice[] = "OFF";
 
-void split_arr(char *myString){
+void split_arr(LIST *current){
       // Returns first token 
-      token = strtok(myString, ":"); 
+      token = strtok(current->string, ":"); 
 
       size=atoi(token);
       int signal[size];
@@ -52,22 +58,22 @@ void split_arr(char *myString){
 
 }
 
-void FCFS_sch(const char *InputPath, const char *OutputPath){
+void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
+
+   out_fptr =  fopen(OutputPath, "a");
 
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for FCFS
-
-      // Open a file in read mode
-      inp_fptr = fopen(InputPath, "r");
-      // Store the content of the file
-      out_fptr =  fopen(OutputPath, "a");
+      
       printf("Scheduling Method: First Come First Serve - Non Preemptive\n");
       fprintf(out_fptr, "\nScheduling Method: First Come First Serve - Non Preemptive\n");
+
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
-      while(fgets(myString, 10, inp_fptr)){ //Loop through the input file
-      // Print the file content
-      split_arr(myString);
+
+    //test print
+    for(current = head; current ; current=current->next){
+      split_arr(current);
       arr=0; //Arrival time not needed
       prior=0; //Priority not needed
 
@@ -88,17 +94,15 @@ void FCFS_sch(const char *InputPath, const char *OutputPath){
       avg_wait_time = total_wait_time/p_id;
       printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
       fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-
-      //fprintf(out_fptr, "\n");
-      fclose(inp_fptr);
       fclose(out_fptr);
+
    } else{
       //Run code for preemptive mode for FCFS
       printf("First Come First Serve does not support Preemptive mode.\n");
    }
 }
 
-void SJF_sch(const char *InputPath, const char *OutputPath){
+void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for SJF
       printf("Shortest Job First Non Preemptive Code segment");
@@ -108,7 +112,7 @@ void SJF_sch(const char *InputPath, const char *OutputPath){
    }
 }
 
-void PS_sch(const char *InputPath, const char *OutputPath){
+void PS_sch(LIST *current, LIST *head, const char *OutputPath){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for PS
       printf("Priority scheduling Non Preemptive Code segment");
@@ -118,7 +122,7 @@ void PS_sch(const char *InputPath, const char *OutputPath){
    }
 }
 
-void RRS_sch(const char *InputPath, const char *OutputPath, int time_quan){
+void RRS_sch(LIST *current, LIST *head, const char *OutputPath, int time_quan){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for RRS
       printf("Round Robin scheduling Non Preemptive Code segment");
@@ -129,26 +133,26 @@ void RRS_sch(const char *InputPath, const char *OutputPath, int time_quan){
 }
 
 
-void PrintFile(const char *InputPath, const char *OutputPath){      
-        // Open a file in read mode
-        inp_fptr = fopen(InputPath, "r");
-        // Store the content of the file
-        out_fptr =  fopen(OutputPath, "a");
+// void PrintFile(const char *InputPath, const char *OutputPath){      
+//         // Open a file in read mode
+//         inp_fptr = fopen(InputPath, "r");
+//         // Store the content of the file
+//         out_fptr =  fopen(OutputPath, "a");
 
-        while(fgets(myString, 10, inp_fptr)){
-        // Print the file content
-        printf("%s", myString);
+//         while(fgets(myString, 10, inp_fptr)){
+//         // Print the file content
+//         printf("%s", myString);
       
-        fprintf(out_fptr,"%s", myString);
+//         fprintf(out_fptr,"%s", myString);
    
-        }
-        fprintf(out_fptr, "\n");
+//         }
+//         fprintf(out_fptr, "\n");
 
-        fclose(inp_fptr);
-        fclose(out_fptr);
-}
+//         fclose(inp_fptr);
+//         fclose(out_fptr);
+// }
 
-void menu(const char *InpPath, const char *OutPath){
+void menu(LIST *current, LIST *head, const char *OutPath){
    printf("\nCPU SCHEDULER SIMULATOR\n\n");
    printf("1  |  SCHEDULING METHOD (%s)\n",method_choice);
    printf("2  |  PREEMPTIVE MODE (%s)\n",mode_choice);
@@ -171,35 +175,35 @@ void menu(const char *InpPath, const char *OutPath){
             case 1:
                strcpy(method_choice,sc_method[0]);       //updating the value of method_choice to the selected choice of the user
                printf("\nNo scheduling method was selected\n\n");
-               menu(InpPath,OutPath);                                   //rerunning the menu so the user can continue execution of the program
+               menu(current, head, OutPath);                                   //rerunning the menu so the user can continue execution of the program
                break;
             case 2:
                strcpy(method_choice,sc_method[1]);               
                printf("\nFirst come first serve was selected\n\n");
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
                break;
             case 3:
                strcpy(method_choice,sc_method[2]);                  
                printf("\nShortest job first was selected\n\n");
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
                break;
             case 4:
                strcpy(method_choice,sc_method[3]);
                printf("\nPriority scheduling method was selected\n\n");
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
                break;
             case 5:
                printf("Please enter the time quantum: ");
                scanf("%d", &time_quan);
                strcpy(method_choice,sc_method[4]);
                printf("\nRound robin scheduling was selected with time quantum as %d\n",time_quan);
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
                break;
             
             default:
                printf("Please put in the correct option");
                printf("\n");
-               exit(0);
+               exit(EXIT_FAILURE);
          }
       } else if(menu_option == 2){
          printf("\nPREEMPTIVE MODE\n\n");
@@ -207,42 +211,39 @@ void menu(const char *InpPath, const char *OutPath){
          printf("2  |  ON\n\n");
          printf("OPTION >> ");
          scanf("%d", &mode_option);
-         if(mode_option == 1){
-            //case 1:
+
+         if(mode_option == 1){            
                strcpy(mode_choice,mode[0]);
                printf("\nPreemptive mode is turned OFF\n\n");
-               menu(InpPath,OutPath);
-               //break;
-         } else if(mode_option == 2){
-            //case 2:
+               menu(current, head, OutPath);               
+         } else if(mode_option == 2){            
                strcpy(mode_choice,mode[1]);
                printf("\nPreemptive mode is turned ON\n\n");
-               menu(InpPath,OutPath);
-               //break;
+               menu(current, head, OutPath);
+               
          } else{
-            //default:
                printf("Please put in the correct option");
                printf("\n");
-               exit(0);
+               exit(EXIT_FAILURE);
             }
          } else if(menu_option == 3){ //if show result is selected
 
             //Check which scheduling method and preemptive mode was selected
             if(strcmp(method_choice, "NONE") == 0){ //if no scheduling mode was selected
                printf("Please select a scheduling method before showing result\n");
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
             } else if(strcmp(method_choice, "FCFS") == 0){
-                  FCFS_sch(InpPath, OutPath);                  
+                  FCFS_sch(current, head, OutPath);                  
             } else if(strcmp(method_choice, "SJF") == 0){
-                  SJF_sch(InpPath, OutPath);
+                  SJF_sch(current, head, OutPath);
             } else if(strcmp(method_choice, "PS") == 0){
-                  PS_sch(InpPath, OutPath);
+                  PS_sch(current, head, OutPath);
             } else if(strcmp(method_choice, "RRS") == 0){
-                  RRS_sch(InpPath, OutPath, time_quan);
+                  RRS_sch(current, head, OutPath, time_quan);
             } else{
                   printf("Error while creating Scheduling method");
             }
-            menu(InpPath,OutPath);
+            menu(current, head, OutPath);
 
       } else if(menu_option == 4){
             printf("Do you want to end the program? (y/n): ");
@@ -252,28 +253,30 @@ void menu(const char *InpPath, const char *OutPath){
             if(exit_option == 'y' || exit_option == 'Y') {
                //Print the content of Output.txt to the screen here
                printf("\nProgram ended\n");
-               exit(0);
+               exit(EXIT_FAILURE);
             } else if (exit_option == 'n' || exit_option == 'N'){
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
             } else{
                printf("\nPlease input the correct option\n");
-               menu(InpPath,OutPath);
+               menu(current, head, OutPath);
             }
       } else{
             printf("Please select the correct option");
             printf("\n");
-            exit(0);
+            exit(EXIT_FAILURE);
       }
 }
 int main(int argc, char *argv[]) 
 //argc is the number of arguments, 1 by default if no arguments are passed
 //argv is a pointer to an array of strings
 {
-
+   LIST *current, *head;
+   head = current = NULL;
    char *InputPath; //String to hold the Input file argument from command line
    char *OutputPath; //String to hold the Outut file argument from command line
    int opt;
 
+   if (argc > 1){
    while ((opt = getopt(argc, argv, "fo:")) != -1) { //allowing f and o as options requiring arguments
         switch (opt) {
         case 'f':
@@ -289,8 +292,27 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
    }
-   menu(InputPath,OutputPath);  //run the menu using the InputPath and OutputPath gotten as argument from user
 
+   // Open a file in read mode
+   inp_fptr = fopen(InputPath, "r");
+
+   while(fgets(myString, sizeof(myString), inp_fptr)){ //Loop through the input file
+       LIST *node = malloc(sizeof(LIST));
+        node->string = strdup(myString);//note : strdup is not standard function
+        node->next =NULL;
+        if(head == NULL){
+            current = head = node;
+        } else {
+            current = current->next = node;
+        }
+    }
+   fclose(inp_fptr);
+
+   menu(current,head,OutputPath);  //run the menu using the InputPath and OutputPath gotten as argument from user
+   } else{
+      fprintf(stderr, "Please input the arguments needed to run this program\n");
+      exit(EXIT_FAILURE);
+   }
    exit(0);
 }
 
