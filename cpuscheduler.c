@@ -23,39 +23,55 @@ int wait_time = 0;
 float total_wait_time = 0.0;
 float avg_wait_time = 0.0;
 int bur_wait = 0;
-int i;
+int t;
+int linecnt=0;
 
-struct list {
+typedef struct list {
     char *string;
     struct list *next;
-};
-typedef struct list LIST;
+}LIST;
 
 char method_choice[] = "NONE";
 char mode_choice[] = "OFF";
 
+
+
 void split_arr(LIST *current){
+   int matrix[linecnt][3];
+   int i=0;
+
+
       // Returns first token 
       token = strtok(current->string, ":"); 
 
       size=atoi(token);
       int signal[size];
-      i=0;
+      t=0;
 
       // Keep reading tokens while one of the delimiters still present in myString[]. 
       while (token != NULL) 
       { 
          token = strtok(NULL, ":"); 
          if(token !=NULL){
-         signal[i]=atoi(token);
-         i=i+1;
+         signal[t]=atoi(token);
+         t=t+1;
          }
       } 
 
       bur = size;
       arr = signal[0];
       prior = signal[1];
+      
+      matrix[i][0] = bur;
+      matrix[i][1] = arr;            
+      matrix[i][2] = prior;
 
+      for(int j=0; j<3; j++){
+         printf("%d ", matrix[i][j]);
+      }
+ 
+      printf("\n");
+      i++;
 }
 
 void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
@@ -102,15 +118,50 @@ void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
    }
 }
 
+
+// void add_to_bur(int bur){
+//       BUR_LIST *current2, *head2;
+//       head2 = current2 = NULL;
+//       BUR_LIST *node = malloc(sizeof(BUR_LIST));
+
+//       node->burst = bur;
+//       node->next =NULL;
+//       if(head2 == NULL){
+//             current2 = head2 = node;
+//       } else {
+//             current2 = current2->next = node;
+//       } 
+
+//       for(current2 = head2; current2 ; current2=current2->next){
+//       printf("%d -> ", current2->burst);
+
+//    }
+
+// }
+
+
 void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
+   int matrix[linecnt][3];
+
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for SJF
-      printf("Shortest Job First Non Preemptive Code segment");
+      out_fptr =  fopen(OutputPath, "a");
+
+      for(current = head; current ; current=current->next){
+         split_arr(current);
+         
+      }
+     
+      //perform sorting operation
+
+      printf("\nShortest Job First Non Preemptive Code segment");
+      fclose(out_fptr);
    } else{
       //Run code for preemptive mode for SJF
       printf("Shortest Job First Preemptive Code segment");
    }
-}
+   }
+
 
 void PS_sch(LIST *current, LIST *head, const char *OutputPath){
    if (strcmp(mode_choice, "OFF") == 0){
@@ -270,6 +321,7 @@ int main(int argc, char *argv[])
 //argc is the number of arguments, 1 by default if no arguments are passed
 //argv is a pointer to an array of strings
 {
+
    LIST *current, *head;
    head = current = NULL;
    char *InputPath; //String to hold the Input file argument from command line
@@ -305,6 +357,7 @@ int main(int argc, char *argv[])
         } else {
             current = current->next = node;
         }
+        linecnt++;
     }
    fclose(inp_fptr);
 

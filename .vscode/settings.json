@@ -1,4 +1,9 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+    "files.associations": {
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "string.h": "c"
+    }
 }
