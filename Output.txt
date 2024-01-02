@@ -1,9 +1,0 @@
-
-Scheduling Method: First Come First Serve - Non Preemptive
-Process Waiting Times:
-P1: 0 ms
-P2: 5 ms
-P3: 9 ms
-P4: 12 ms
-P5: 16 ms
-Average Wait Time: 8.40 ms

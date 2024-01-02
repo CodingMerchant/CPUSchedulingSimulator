@@ -18,11 +18,7 @@ int size;
 int bur;
 int arr;
 int prior;
-int p_id = 0;
-int wait_time = 0;
-float total_wait_time = 0.0;
-float avg_wait_time = 0.0;
-int bur_wait = 0;
+
 int t;
 int linecnt=0;
 
@@ -31,15 +27,20 @@ typedef struct list {
     struct list *next;
 }LIST;
 
+typedef struct bur_list {
+    int pid;
+    int bur;
+    int arr;
+    int prior;
+    struct bur_list *next;
+}BUR_LIST;
+
 char method_choice[] = "NONE";
 char mode_choice[] = "OFF";
 
 
 
 void split_arr(LIST *current){
-   int matrix[linecnt][3];
-   int i=0;
-
 
       // Returns first token 
       token = strtok(current->string, ":"); 
@@ -48,7 +49,7 @@ void split_arr(LIST *current){
       int signal[size];
       t=0;
 
-      // Keep reading tokens while one of the delimiters still present in myString[]. 
+      // Keep reading tokens while one of the delimiters still present in token. 
       while (token != NULL) 
       { 
          token = strtok(NULL, ":"); 
@@ -58,23 +59,83 @@ void split_arr(LIST *current){
          }
       } 
 
+      //save the Burst, ArrivalTime and Priority to variables
       bur = size;
       arr = signal[0];
       prior = signal[1];
-      
-      matrix[i][0] = bur;
-      matrix[i][1] = arr;            
-      matrix[i][2] = prior;
 
-      for(int j=0; j<3; j++){
-         printf("%d ", matrix[i][j]);
-      }
- 
-      printf("\n");
-      i++;
 }
 
+void moveToFront(struct bur_list** head_ref) 
+{ 
+    /* If linked list is empty, or it contains only one 
+      node, then nothing needs to be done, simply return */
+    if (*head_ref == NULL || (*head_ref)->next == NULL) 
+        return; 
+  
+    /* Initialize second last and last pointers */
+    struct bur_list* secLast = NULL; 
+    struct bur_list* last = *head_ref; 
+  
+    /*After this loop secLast contains address of second 
+    last node and last contains address of last node in 
+    Linked List */
+    while (last->next != NULL) { 
+        secLast = last; 
+        last = last->next; 
+    } 
+  
+    /* Set the next of second last as NULL */
+    secLast->next = NULL; 
+  
+    /* Set next of last as head node */
+    last->next = *head_ref; 
+  
+    /* Change the head pointer to point to last node now */
+    *head_ref = last; 
+} 
+
+int bubbleSortbur(struct bur_list** head, int linecnt)
+{
+    struct bur_list** h;
+    int i, j, swapped;
+ 
+    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    for (i = 0; i <= linecnt; i++) {
+ 
+        h = head;
+        swapped = 0;
+ 
+        for (j = 0; j < linecnt - i - 1; j++) {
+ 
+            struct bur_list* p1 = *h;
+            struct bur_list* p2 = p1->next;
+ 
+            if (p1->bur > p2->bur) {
+ 
+               struct bur_list* tmp = p2->next;
+               p2->next = p1;
+               p1->next = tmp;
+               *h = p2;
+               swapped = 1;
+            }
+ 
+            h = &(*h)->next;
+        }
+ 
+        /* break if the loop ended without any swap */
+        if (swapped == 0)
+            break;
+    }
+}
+
+
 void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
+   int p_id = 0;
+   int wait_time = 0;
+   int bur_wait = 0;
+   float total_wait_time = 0.0;
+   float avg_wait_time = 0.0;
 
    out_fptr =  fopen(OutputPath, "a");
 
@@ -119,40 +180,82 @@ void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
 }
 
 
-// void add_to_bur(int bur){
-//       BUR_LIST *current2, *head2;
-//       head2 = current2 = NULL;
-//       BUR_LIST *node = malloc(sizeof(BUR_LIST));
-
-//       node->burst = bur;
-//       node->next =NULL;
-//       if(head2 == NULL){
-//             current2 = head2 = node;
-//       } else {
-//             current2 = current2->next = node;
-//       } 
-
-//       for(current2 = head2; current2 ; current2=current2->next){
-//       printf("%d -> ", current2->burst);
-
-//    }
-
-// }
-
-
 void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
-   int matrix[linecnt][3];
+   int p_id = 0;
+   int p_count=0;
+   int wait_time = 0;
+   int pwait_time = 0;
+   int arr_wait = 0;
+   int bur_wait = 0;
+   float total_wait_time = 0.0;
+   float avg_wait_time = 0.0;
+   out_fptr =  fopen(OutputPath, "a");
 
    if (strcmp(mode_choice, "OFF") == 0){
-      //Run code for none preemptive mode for SJF
-      out_fptr =  fopen(OutputPath, "a");
 
-      for(current = head; current ; current=current->next){
+      printf("Scheduling Method: Shortest Job First - Non Preemptive\n");
+      fprintf(out_fptr, "\nScheduling Method: Shortest Job First - Non Preemptive\n");
+
+      printf("Process Waiting Times:");
+      fprintf(out_fptr, "Process Waiting Times:");
+      //Run code for none preemptive mode for SJF
+  
+
+      BUR_LIST *current2, *head2;
+      head2 = current2 = NULL;
+      
+      for(current = head; current ; current=current->next){ 
          split_arr(current);
          
+         BUR_LIST *node = malloc(sizeof(BUR_LIST));
+         node->bur = bur;
+         node->arr = arr;
+         node->prior = prior;
+         node->pid = p_id;
+
+         node->next =NULL;
+        if(head2 == NULL){
+            current2 = head2 = node;
+        } else {
+            current2 = current2->next = node;
+        }
+      p_id++;
       }
-     
+
+
       //perform sorting operation
+      bubbleSortbur(&head2, linecnt);
+      printf("\n");
+
+      //After sorting from lowest burst to highest burst
+      for(current2 = head2; current2 ; current2=current2->next){
+      
+      //To move the exception burst at arrival time 0 to the start of the list
+      if(current2->arr == 0){
+         moveToFront(&head2);
+      }
+      }
+
+      //After Arrival Condition met
+      for(current2 = head2; current2 ; current2=current2->next){
+      
+      //Calculating wait times      
+      wait_time = (bur_wait + wait_time); //Calculating the wait time for current process
+      
+      pwait_time = wait_time - current2->arr; //Calculating the wait time with respect to the arrival time
+
+      printf("\nP%d: %d ms", current2->pid+1,pwait_time); //Printing the process names with wait times
+      fprintf(out_fptr, "\nP%d: %d ms", current2->pid+1,pwait_time);
+
+      total_wait_time = total_wait_time + pwait_time;
+
+      bur_wait = current2->bur; //setting bur_wait to hold value of current process to calculate wait time of next process
+      p_count++; //counting the number of processes
+      }
+
+      avg_wait_time = total_wait_time/p_count; 
+      printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
+      fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
 
       printf("\nShortest Job First Non Preemptive Code segment");
       fclose(out_fptr);
@@ -161,6 +264,7 @@ void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
       printf("Shortest Job First Preemptive Code segment");
    }
    }
+
 
 
 void PS_sch(LIST *current, LIST *head, const char *OutputPath){
@@ -182,26 +286,6 @@ void RRS_sch(LIST *current, LIST *head, const char *OutputPath, int time_quan){
       printf("Round Robin scheduling Preemptive Code segment");
    }
 }
-
-
-// void PrintFile(const char *InputPath, const char *OutputPath){      
-//         // Open a file in read mode
-//         inp_fptr = fopen(InputPath, "r");
-//         // Store the content of the file
-//         out_fptr =  fopen(OutputPath, "a");
-
-//         while(fgets(myString, 10, inp_fptr)){
-//         // Print the file content
-//         printf("%s", myString);
-      
-//         fprintf(out_fptr,"%s", myString);
-   
-//         }
-//         fprintf(out_fptr, "\n");
-
-//         fclose(inp_fptr);
-//         fclose(out_fptr);
-// }
 
 void menu(LIST *current, LIST *head, const char *OutPath){
    printf("\nCPU SCHEDULER SIMULATOR\n\n");
@@ -254,7 +338,7 @@ void menu(LIST *current, LIST *head, const char *OutPath){
             default:
                printf("Please put in the correct option");
                printf("\n");
-               exit(EXIT_FAILURE);
+               exit(1);
          }
       } else if(menu_option == 2){
          printf("\nPREEMPTIVE MODE\n\n");
@@ -275,7 +359,7 @@ void menu(LIST *current, LIST *head, const char *OutPath){
          } else{
                printf("Please put in the correct option");
                printf("\n");
-               exit(EXIT_FAILURE);
+               exit(1);
             }
          } else if(menu_option == 3){ //if show result is selected
 
@@ -304,7 +388,7 @@ void menu(LIST *current, LIST *head, const char *OutPath){
             if(exit_option == 'y' || exit_option == 'Y') {
                //Print the content of Output.txt to the screen here
                printf("\nProgram ended\n");
-               exit(EXIT_FAILURE);
+               exit(1);
             } else if (exit_option == 'n' || exit_option == 'N'){
                menu(current, head, OutPath);
             } else{
@@ -312,9 +396,9 @@ void menu(LIST *current, LIST *head, const char *OutPath){
                menu(current, head, OutPath);
             }
       } else{
-            printf("Please select the correct option");
-            printf("\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Please select the correct option\n");
+            exit(1);
+         
       }
 }
 int main(int argc, char *argv[]) 
