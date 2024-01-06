@@ -129,13 +129,81 @@ int bubbleSortbur(struct bur_list** head, int linecnt)
     }
 }
 
+int bubbleSortarr(struct bur_list** head, int linecnt)
+{
+    struct bur_list** h;
+    int i, j, swapped;
+ 
+    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    for (i = 0; i <= linecnt; i++) {
+ 
+        h = head;
+        swapped = 0;
+ 
+        for (j = 0; j < linecnt - i - 1; j++) {
+ 
+            struct bur_list* p1 = *h;
+            struct bur_list* p2 = p1->next;
+ 
+            if (p1->arr > p2->arr) {
+ 
+               struct bur_list* tmp = p2->next;
+               p2->next = p1;
+               p1->next = tmp;
+               *h = p2;
+               swapped = 1;
+            }
+ 
+            h = &(*h)->next;
+        }
+ 
+        /* break if the loop ended without any swap */
+        if (swapped == 0)
+            break;
+    }
+}
 
-void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
-   int p_id = 0;
+int bubbleSortpid(struct bur_list** head, int linecnt)
+{
+    struct bur_list** h;
+    int i, j, swapped;
+ 
+    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    for (i = 0; i <= linecnt; i++) {
+ 
+        h = head;
+        swapped = 0;
+ 
+        for (j = 0; j < linecnt - i - 1; j++) {
+ 
+            struct bur_list* p1 = *h;
+            struct bur_list* p2 = p1->next;
+ 
+            if (p1->pid > p2->pid) {
+ 
+               struct bur_list* tmp = p2->next;
+               p2->next = p1;
+               p1->next = tmp;
+               *h = p2;
+               swapped = 1;
+            }
+ 
+            h = &(*h)->next;
+        }
+ 
+        /* break if the loop ended without any swap */
+        if (swapped == 0)
+            break;
+    }
+}
+
+
+void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    int wait_time = 0;
    int bur_wait = 0;
    float total_wait_time = 0.0;
    float avg_wait_time = 0.0;
+   int p_id=0;
 
    out_fptr =  fopen(OutputPath, "a");
 
@@ -148,24 +216,25 @@ void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
 
-    //test print
-    for(current = head; current ; current=current->next){
-      split_arr(current);
-      arr=0; //Arrival time not needed
-      prior=0; //Priority not needed
+      //First sorting by PID to rearrange the list to it's original form
+      bubbleSortpid(&head, linecnt);
 
-      wait_time = bur_wait + wait_time; //Calculating the wait time for current process
+      //Then sorting by arrival time to always protect the accuracy of the simulator
+      bubbleSortarr(&head,linecnt);
 
-      printf("\nP%d: %d ms", p_id+1,wait_time); //Printing the process names(p1, p2, p3) with wait times
-      fprintf(out_fptr, "\nP%d: %d ms", p_id+1,wait_time);
+    //performing FCFS on each process
+      for(current = head; current ; current=current->next){
+         wait_time = bur_wait + wait_time; //Calculating the wait time for current process
+
+         printf("\nP%d: %d ms", p_id+1,wait_time); //Printing the process names(p1, p2, p3) with wait times
+         fprintf(out_fptr, "\nP%d: %d ms", p_id+1,wait_time);
 
 
-      total_wait_time = total_wait_time + wait_time;
+         total_wait_time = total_wait_time + wait_time;
 
-      //printf("\n%d | %d | %d", bur,arr,prior);
-      bur_wait = bur; //setting bur_wait to hold value of current process to calculate wait time of next process
-      p_id++;
-      //fprintf(out_fptr,"%s", myString);
+         //printf("\n%d | %d | %d", bur,arr,prior);
+         bur_wait = current->bur; //setting bur_wait to hold value of current process to calculate wait time of next process
+         p_id++;
       }
 
       avg_wait_time = total_wait_time/p_id;
@@ -180,7 +249,7 @@ void FCFS_sch(LIST *current, LIST *head, const char *OutputPath){
 }
 
 
-void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
+void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    int p_id = 0;
    int p_count=0;
    int wait_time = 0;
@@ -199,57 +268,36 @@ void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
       //Run code for none preemptive mode for SJF
-  
-
-      BUR_LIST *current2, *head2;
-      head2 = current2 = NULL;
-      
-      for(current = head; current ; current=current->next){ 
-         split_arr(current);
-         
-         BUR_LIST *node = malloc(sizeof(BUR_LIST));
-         node->bur = bur;
-         node->arr = arr;
-         node->prior = prior;
-         node->pid = p_id;
-
-         node->next =NULL;
-        if(head2 == NULL){
-            current2 = head2 = node;
-        } else {
-            current2 = current2->next = node;
-        }
-      p_id++;
-      }
-
 
       //perform sorting operation
-      bubbleSortbur(&head2, linecnt);
+      bubbleSortpid(&head, linecnt);
+
+      bubbleSortbur(&head, linecnt);
       printf("\n");
 
       //After sorting from lowest burst to highest burst
-      for(current2 = head2; current2 ; current2=current2->next){
+      for(current = head; current ; current=current->next){
       
       //To move the exception burst at arrival time 0 to the start of the list
-      if(current2->arr == 0){
-         moveToFront(&head2);
+      if(current->arr == 0){
+         moveToFront(&head);
       }
       }
 
       //After Arrival Condition met
-      for(current2 = head2; current2 ; current2=current2->next){
+      for(current = head; current ; current=current->next){
       
       //Calculating wait times      
       wait_time = (bur_wait + wait_time); //Calculating the wait time for current process
       
-      pwait_time = wait_time - current2->arr; //Calculating the wait time with respect to the arrival time
+      pwait_time = wait_time - current->arr; //Calculating the wait time with respect to the arrival time
 
-      printf("\nP%d: %d ms", current2->pid+1,pwait_time); //Printing the process names with wait times
-      fprintf(out_fptr, "\nP%d: %d ms", current2->pid+1,pwait_time);
+      printf("\nP%d: %d ms", current->pid+1,pwait_time); //Printing the process names with wait times
+      fprintf(out_fptr, "\nP%d: %d ms", current->pid+1,pwait_time);
 
       total_wait_time = total_wait_time + pwait_time;
 
-      bur_wait = current2->bur; //setting bur_wait to hold value of current process to calculate wait time of next process
+      bur_wait = current->bur; //setting bur_wait to hold value of current process to calculate wait time of next process
       p_count++; //counting the number of processes
       }
 
@@ -265,9 +313,7 @@ void SJF_sch(LIST *current, LIST *head, const char *OutputPath){
    }
    }
 
-
-
-void PS_sch(LIST *current, LIST *head, const char *OutputPath){
+void PS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for PS
       printf("Priority scheduling Non Preemptive Code segment");
@@ -277,7 +323,7 @@ void PS_sch(LIST *current, LIST *head, const char *OutputPath){
    }
 }
 
-void RRS_sch(LIST *current, LIST *head, const char *OutputPath, int time_quan){
+void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath, int time_quan){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for RRS
       printf("Round Robin scheduling Non Preemptive Code segment");
@@ -287,7 +333,7 @@ void RRS_sch(LIST *current, LIST *head, const char *OutputPath, int time_quan){
    }
 }
 
-void menu(LIST *current, LIST *head, const char *OutPath){
+void menu(BUR_LIST *current, BUR_LIST *head, const char *OutPath){
    printf("\nCPU SCHEDULER SIMULATOR\n\n");
    printf("1  |  SCHEDULING METHOD (%s)\n",method_choice);
    printf("2  |  PREEMPTIVE MODE (%s)\n",mode_choice);
@@ -406,8 +452,8 @@ int main(int argc, char *argv[])
 //argv is a pointer to an array of strings
 {
 
-   LIST *current, *head;
-   head = current = NULL;
+   LIST *current1, *head1;
+   head1 = current1 = NULL;
    char *InputPath; //String to hold the Input file argument from command line
    char *OutputPath; //String to hold the Outut file argument from command line
    int opt;
@@ -436,15 +482,40 @@ int main(int argc, char *argv[])
        LIST *node = malloc(sizeof(LIST));
         node->string = strdup(myString);//note : strdup is not standard function
         node->next =NULL;
-        if(head == NULL){
-            current = head = node;
+        if(head1 == NULL){
+            current1 = head1 = node;
         } else {
-            current = current->next = node;
+            current1 = current1->next = node;
         }
         linecnt++;
     }
    fclose(inp_fptr);
 
+   //initializing current and head for second Linked List
+   BUR_LIST *current, *head;
+   head = current = NULL;
+   int p_id=0;
+
+   //Looping through each node of the original linked list to split and save the integer values to a new linked list
+   for(current1 = head1; current1 ; current1=current1->next){ 
+         split_arr(current1);
+         
+         BUR_LIST *node = malloc(sizeof(BUR_LIST));
+         node->bur = bur;
+         node->arr = arr;
+         node->prior = prior;
+         node->pid = p_id;
+
+         node->next =NULL;
+        if(head == NULL){
+            current = head = node;
+        } else {
+            current = current->next = node;
+        }
+      p_id++;
+      }
+
+   
    menu(current,head,OutputPath);  //run the menu using the InputPath and OutputPath gotten as argument from user
    } else{
       fprintf(stderr, "Please input the arguments needed to run this program\n");
