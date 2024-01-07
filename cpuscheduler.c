@@ -5,21 +5,15 @@
 
 FILE *inp_fptr;
 FILE *out_fptr;
-char myString[10];
-char *sc_method[]={"NONE","FCFS","SJF","PS","RRS"};      //initiating a string array to hold scheduling methods
-char *mode[]={"OFF", "ON"};
-char *inp_data;
-char *token;
-int menu_option;
-int sch_choice;
-int mode_option;
-int time_quan;
-int size;
+char myString[100];
+
+char method_choice[] = "NONE";
+char mode_choice[] = "OFF";
+
 int bur;
 int arr;
 int prior;
 
-int t;
 int linecnt=0;
 
 typedef struct list {
@@ -35,13 +29,15 @@ typedef struct bur_list {
     struct bur_list *next;
 }BUR_LIST;
 
-char method_choice[] = "NONE";
-char mode_choice[] = "OFF";
+
 
 
 
 void split_arr(LIST *current){
 
+      char *token;
+      int t;
+      int size;
       // Returns first token 
       token = strtok(current->string, ":"); 
 
@@ -197,9 +193,44 @@ int bubbleSortpid(struct bur_list** head, int linecnt)
     }
 }
 
+int bubbleSortprior(struct bur_list** head, int linecnt)
+{
+    struct bur_list** h;
+    int i, j, swapped;
+ 
+    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    for (i = 0; i <= linecnt; i++) {
+ 
+        h = head;
+        swapped = 0;
+ 
+        for (j = 0; j < linecnt - i - 1; j++) {
+ 
+            struct bur_list* p1 = *h;
+            struct bur_list* p2 = p1->next;
+ 
+            if (p1->prior > p2->prior) {
+ 
+               struct bur_list* tmp = p2->next;
+               p2->next = p1;
+               p1->next = tmp;
+               *h = p2;
+               swapped = 1;
+            }
+ 
+            h = &(*h)->next;
+        }
+ 
+        /* break if the loop ended without any swap */
+        if (swapped == 0)
+            break;
+    }
+}
+
 
 void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    int wait_time = 0;
+   int pwait_time = 0;
    int bur_wait = 0;
    float total_wait_time = 0.0;
    float avg_wait_time = 0.0;
@@ -210,7 +241,7 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for FCFS
       
-      printf("Scheduling Method: First Come First Serve - Non Preemptive\n");
+      printf("\nScheduling Method: First Come First Serve - Non Preemptive\n");
       fprintf(out_fptr, "\nScheduling Method: First Come First Serve - Non Preemptive\n");
 
       printf("Process Waiting Times:");
@@ -224,13 +255,15 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
 
     //performing FCFS on each process
       for(current = head; current ; current=current->next){
-         wait_time = bur_wait + wait_time; //Calculating the wait time for current process
+         wait_time = (bur_wait + wait_time); //Calculating the wait time for current process
+         pwait_time = wait_time - current->arr;
+         
+         printf("\nP%d: %d ms", p_id+1,pwait_time); //Printing the process names(p1, p2, p3) with wait times
 
-         printf("\nP%d: %d ms", p_id+1,wait_time); //Printing the process names(p1, p2, p3) with wait times
-         fprintf(out_fptr, "\nP%d: %d ms", p_id+1,wait_time);
+         fprintf(out_fptr, "\nP%d: %d ms", p_id+1,pwait_time);
 
-
-         total_wait_time = total_wait_time + wait_time;
+         
+         total_wait_time = total_wait_time + pwait_time;
 
          //printf("\n%d | %d | %d", bur,arr,prior);
          bur_wait = current->bur; //setting bur_wait to hold value of current process to calculate wait time of next process
@@ -248,21 +281,19 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    }
 }
 
-
 void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
-   int p_id = 0;
-   int p_count=0;
-   int wait_time = 0;
-   int pwait_time = 0;
-   int arr_wait = 0;
-   int bur_wait = 0;
-   float total_wait_time = 0.0;
-   float avg_wait_time = 0.0;
+      int p_id = 0;
+      int p_count=0;
+      int wait_time = 0;
+      int pwait_time = 0;
+      int arr_wait = 0;
+      int bur_wait = 0;
+      float total_wait_time = 0.0;
+      float avg_wait_time = 0.0;
    out_fptr =  fopen(OutputPath, "a");
 
-   if (strcmp(mode_choice, "OFF") == 0){
-
-      printf("Scheduling Method: Shortest Job First - Non Preemptive\n");
+   if (strcmp(mode_choice, "OFF") == 0){      
+      printf("\nScheduling Method: Shortest Job First - Non Preemptive\n");
       fprintf(out_fptr, "\nScheduling Method: Shortest Job First - Non Preemptive\n");
 
       printf("Process Waiting Times:");
@@ -305,7 +336,6 @@ void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
       printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
       fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
 
-      printf("\nShortest Job First Non Preemptive Code segment");
       fclose(out_fptr);
    } else{
       //Run code for preemptive mode for SJF
@@ -314,9 +344,64 @@ void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    }
 
 void PS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
+   int p_id = 0;
+   int p_count=0;
+   int wait_time = 0;
+   int pwait_time = 0;
+   int arr_wait = 0;
+   int bur_wait = 0;
+   float total_wait_time = 0.0;
+   float avg_wait_time = 0.0;
+
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for PS
-      printf("Priority scheduling Non Preemptive Code segment");
+      out_fptr =  fopen(OutputPath, "a");
+
+      printf("\nScheduling Method: Priority Scheduling - Non Preemptive\n");
+      fprintf(out_fptr, "\nScheduling Method: Priority Scheduling - Non Preemptive\n");
+
+      printf("Process Waiting Times:");
+      fprintf(out_fptr, "Process Waiting Times:");
+      //Run code for none preemptive mode for SJF
+
+      //perform sorting operation
+      bubbleSortpid(&head, linecnt);
+
+      bubbleSortprior(&head, linecnt);
+      printf("\n");
+
+      //After sorting from lowest priority to highest priority
+      for(current = head; current ; current=current->next){
+      
+      //To move the exception burst at arrival time 0 to the start of the list
+      if(current->arr == 0){
+         moveToFront(&head);
+      }
+      }
+
+      //After Arrival Condition met
+      for(current = head; current ; current=current->next){
+      
+      //Calculating wait times      
+      wait_time = (bur_wait + wait_time); //Calculating the wait time for current process
+      
+      pwait_time = wait_time - current->arr; //Calculating the wait time with respect to the arrival time
+
+      printf("\nP%d: %d ms", current->pid+1,pwait_time); //Printing the process names with wait times
+      fprintf(out_fptr, "\nP%d: %d ms", current->pid+1,pwait_time);
+
+      total_wait_time = total_wait_time + pwait_time;
+
+      bur_wait = current->bur; //setting bur_wait to hold value of current process to calculate wait time of next process
+      p_count++; //counting the number of processes
+      }
+
+      avg_wait_time = total_wait_time/p_count; 
+      printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
+      fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
+
+
+      fclose(out_fptr);
    } else{
       //Run code for preemptive mode for PS
       printf("Priority scheduling Preemptive Code segment");
@@ -326,7 +411,7 @@ void PS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
 void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath, int time_quan){
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for RRS
-      printf("Round Robin scheduling Non Preemptive Code segment");
+      printf("Round Robin scheduling does not support Non Preemptive mode");
    } else{
       //Run code for preemptive mode for RRS
       printf("Round Robin scheduling Preemptive Code segment");
@@ -334,6 +419,15 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath, int time
 }
 
 void menu(BUR_LIST *current, BUR_LIST *head, const char *OutPath){
+   char *sc_method[]={"NONE","FCFS","SJF","PS","RRS"};      //initiating a string array to hold scheduling methods
+   char *mode[]={"OFF", "ON"};
+   char *inp_data;
+
+   int menu_option;
+   int sch_choice;
+   int mode_option;
+   int time_quan;
+
    printf("\nCPU SCHEDULER SIMULATOR\n\n");
    printf("1  |  SCHEDULING METHOD (%s)\n",method_choice);
    printf("2  |  PREEMPTIVE MODE (%s)\n",mode_choice);
@@ -433,6 +527,15 @@ void menu(BUR_LIST *current, BUR_LIST *head, const char *OutPath){
             scanf(" %c", &exit_option);  
             if(exit_option == 'y' || exit_option == 'Y') {
                //Print the content of Output.txt to the screen here
+               inp_fptr = fopen(OutPath, "r");
+
+
+               while(fgets(myString, sizeof(myString), inp_fptr)){
+                  printf("%s", myString);
+
+               }
+               fclose(inp_fptr);
+
                printf("\nProgram ended\n");
                exit(1);
             } else if (exit_option == 'n' || exit_option == 'N'){
