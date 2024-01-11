@@ -9,4 +9,3 @@ Priority Scheduling - Non Preemptive
 Round Robin Scheduling - Non Preemptive
 Round Robin Scheduling - Preemptive
 
-There is currently a bug that glitches outt he program if you try run any scheduling method after SJF. Hopefully it would be fixed before my final submission
