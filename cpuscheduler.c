@@ -71,39 +71,6 @@ void split_arr(LIST *current){
 
 }
 
-int bubbleSortbur(struct bur_list** head, int linecnt)
-{
-    struct bur_list** h;
-    int i, j, swapped;
- 
-    //Performing bubble Sort to arrange linked list from smallest burst to biggest burst
-    for (i = 0; i <= linecnt; i++) {
- 
-        h = head;
-        swapped = 0;
- 
-        for (j = 0; j < linecnt - i - 1; j++) {
- 
-            struct bur_list* p1 = *h;
-            struct bur_list* p2 = p1->next;
- 
-            if (p1->bur > p2->bur) {
- 
-               struct bur_list* tmp = p2->next;
-               p2->next = p1;
-               p1->next = tmp;
-               *h = p2;
-               swapped = 1;
-            }
- 
-            h = &(*h)->next;
-        }
- 
-        /* break if the loop ended without any swap */
-        if (swapped == 0)
-            break;
-    }
-}
 
 int bubbleSortarr(struct temp_list** head, int linecnt)
 {
@@ -295,11 +262,6 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
         fclose(out_fptr);
         deleteListContent(temphead);
 
-        printf("\n\nMain List FCFS execution");
-        for(current=head;current;current=current->next){
-         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
-        }
-
    } else{
       //Run code for preemptive mode for FCFS
       
@@ -372,10 +334,6 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
         fclose(out_fptr);
         deleteListContent(temphead);
 
-        printf("\n\nMain List FCFS execution");
-        for(current=head;current;current=current->next){
-         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
-        }
    }
 }
 
@@ -481,16 +439,6 @@ void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath)
         fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
 
         deleteListContent(temphead);
-
-        printf("\n\nMain List After SJF execution");
-        for(current=head;current;current=current->next){
-         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
-        }
-
-        printf("\n\nTemp List After SJF execution");
-        for(tempcurrent=temphead;tempcurrent;tempcurrent=tempcurrent->next){
-         printf("\n%d -- %d -- %d", tempcurrent->bur, tempcurrent->arr, tempcurrent->prior);
-        }
         
    } else{
          printf("Shortest Job First Preemptive Code Segment");
@@ -597,15 +545,6 @@ void PS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
         fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
         deleteListContent(temphead);
 
-         printf("\n\nMain List After PS execution");
-        for(current=head;current;current=current->next){
-         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
-        }
-
-        printf("\n\nTemp List After PS execution");
-        for(tempcurrent=temphead;tempcurrent;tempcurrent=tempcurrent->next){
-         printf("\n%d -- %d -- %d", tempcurrent->bur, tempcurrent->arr, tempcurrent->prior);
-        }
    } else{
          printf("Priority Scheduling Preemptive Code Segment");
 
