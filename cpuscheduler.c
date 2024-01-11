@@ -31,6 +31,14 @@ typedef struct bur_list {
     struct bur_list *next;
 }BUR_LIST;
 
+typedef struct temp_list {
+    int pid;
+    int bur;
+    int arr;
+    int prior;
+    int rem_time;
+    struct temp_list *next;
+}TEMP_LIST;
 
 
 
@@ -63,46 +71,12 @@ void split_arr(LIST *current){
 
 }
 
-int moveZeroToFront(struct bur_list** head, int linecnt)
-{
-    struct bur_list** h;
-    int i, j, swapped;
- 
-    //Performing bubble Sort to arrange linked list from smallest to biggest  
-    for (i = 0; i <= linecnt; i++) {
- 
-        h = head;
-        swapped = 0;
- 
-        for (j = 0; j < linecnt - i - 1; j++) {
- 
-            struct bur_list* p1 = *h;
-            struct bur_list* p2 = p1->next;
- 
-            if (p1->arr != 0 && p2->arr == 0) {
- 
-               struct bur_list* tmp = p2->next;
-               p2->next = p1;
-               p1->next = tmp;
-               *h = p2;
-               swapped = 1;
-            }
- 
-            h = &(*h)->next;
-        }
- 
-        /* break if the loop ended without any swap */
-        if (swapped == 0)
-            break;
-    }
-}
-
 int bubbleSortbur(struct bur_list** head, int linecnt)
 {
     struct bur_list** h;
     int i, j, swapped;
  
-    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    //Performing bubble Sort to arrange linked list from smallest burst to biggest burst
     for (i = 0; i <= linecnt; i++) {
  
         h = head;
@@ -131,12 +105,12 @@ int bubbleSortbur(struct bur_list** head, int linecnt)
     }
 }
 
-int bubbleSortarr(struct bur_list** head, int linecnt)
+int bubbleSortarr(struct temp_list** head, int linecnt)
 {
-    struct bur_list** h;
+   struct temp_list** h;
     int i, j, swapped;
  
-    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    //Performing bubble Sort to arrange linked list according to arrival time
     for (i = 0; i <= linecnt; i++) {
  
         h = head;
@@ -144,46 +118,12 @@ int bubbleSortarr(struct bur_list** head, int linecnt)
  
         for (j = 0; j < linecnt - i - 1; j++) {
  
-            struct bur_list* p1 = *h;
-            struct bur_list* p2 = p1->next;
+            struct temp_list* p1 = *h;
+            struct temp_list* p2 = p1->next;
  
-            if (p1->arr > p2->arr) {
+            if (p1->arr > p2->arr) { //Check if current arrival time is smaller than next
  
-               struct bur_list* tmp = p2->next;
-               p2->next = p1;
-               p1->next = tmp;
-               *h = p2;
-               swapped = 1;
-            }
- 
-            h = &(*h)->next;
-        }
- 
-        /* break if the loop ended without any swap */
-        if (swapped == 0)
-            break;
-    }
-}
-
-int bubbleSortpid(struct bur_list** head, int linecnt)
-{
-    struct bur_list** h;
-    int i, j, swapped;
- 
-    //Performing bubble Sort to arrange linked list from smallest to biggest  
-    for (i = 0; i <= linecnt; i++) {
- 
-        h = head;
-        swapped = 0;
- 
-        for (j = 0; j < linecnt - i - 1; j++) {
- 
-            struct bur_list* p1 = *h;
-            struct bur_list* p2 = p1->next;
- 
-            if (p1->pid > p2->pid) {
- 
-               struct bur_list* tmp = p2->next;
+               struct temp_list* tmp = p2->next;
                p2->next = p1;
                p1->next = tmp;
                *h = p2;
@@ -204,12 +144,11 @@ int bubbleSortprior(struct bur_list** head, int linecnt)
     struct bur_list** h;
     int i, j, swapped;
  
-    //Performing bubble Sort to arrange linked list from smallest to biggest  
+    //Performing bubble Sort to arrange linked list according to priority
     for (i = 0; i <= linecnt; i++) {
  
         h = head;
         swapped = 0;
- 
         for (j = 0; j < linecnt - i - 1; j++) {
  
             struct bur_list* p1 = *h;
@@ -233,7 +172,21 @@ int bubbleSortprior(struct bur_list** head, int linecnt)
     }
 }
 
+void deleteListContent(TEMP_LIST *temphead) {
+    TEMP_LIST *tempcurrent = temphead;
+    TEMP_LIST *next;
 
+    while (tempcurrent!= NULL) {
+        next = tempcurrent->next;
+        free(tempcurrent);
+        tempcurrent = next;
+    }
+
+    // Set the head to NULL to indicate an empty list
+    temphead = NULL;
+}
+
+   
 void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    int wait_time = 0;
    int pwait_time = 0;
@@ -243,14 +196,31 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
    float avg_wait_time = 0.0;   
    int p_count=0;
 
-   if (head == NULL)
-    {
-        printf("Please check if the input file is empty");
-    }
-    else
-    {
-
    out_fptr =  fopen(OutputPath, "a");
+
+   //Using Temporary list so main linked list data is preserved
+      TEMP_LIST *tempcurrent, *temphead, *node;
+          temphead = tempcurrent = NULL;
+         int p_id = 0;
+
+         for(current = head; current ; current=current->next){ 
+         
+         node = malloc(sizeof(TEMP_LIST));
+         node->bur = current->bur;
+         node->arr = current->arr;
+         node->prior = current->prior;
+         node->rem_time = current->rem_time;
+         node->pid = p_id;
+
+         node->next =NULL;
+        if(temphead == NULL){
+            tempcurrent = temphead = node;
+        } else {
+            tempcurrent = tempcurrent->next = node;
+        }
+        p_id++;
+         }
+
 
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for FCFS
@@ -261,35 +231,77 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
 
-      //First sorting by PID to rearrange the list to it's original form
-      bubbleSortpid(&head, linecnt);
-
-      //Then sorting by arrival time to always protect the accuracy of the simulator
-      bubbleSortarr(&head,linecnt);
+      
+        //Sorting with respect to arrival time
+        bubbleSortarr(&temphead,linecnt);
 
       //performing FCFS on each process
-      current = head;
-      while (current != NULL){     //Repeat until end of list       
-         comp_time = comp_time + current->bur; //Calculating the completion time for current process
-         turn_around_time = comp_time - current->arr; //Calculating the turn around time for current process
-         pwait_time = turn_around_time - current->bur; //Calculating the wait time for current process
-         printf("\nP%d: %d ms", current->pid+1,pwait_time); //Printing the process names(p1, p2, p3) with wait times
-         fprintf(out_fptr, "\nP%d: %d ms", current->pid+1,pwait_time);
+       tempcurrent = temphead;
+        while (tempcurrent != NULL)
+        {
+            TEMP_LIST *arrivedJob = NULL;
+            TEMP_LIST *tmp = tempcurrent;
 
-         total_wait_time = total_wait_time + pwait_time;
-         //printf("\n%d | %d | %d", bur,arr,prior);
-         p_count++;
-         current=current->next; //go to the next node and repeat
-      }
+            // Find the process that has arrived
+            while (tmp != NULL)
+            {
+               if(tmp->arr <= comp_time){
+                if (arrivedJob == NULL)
+                {
+                    arrivedJob = tmp;
+                }
+                
+                }
+                tmp = tmp->next;
+            }
 
-      avg_wait_time = total_wait_time/p_count;
-      printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-      fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-      fclose(out_fptr);
+            if (arrivedJob != NULL)
+            {
+               //calculating process wait time
+               comp_time = comp_time + arrivedJob->bur;
+               turn_around_time = comp_time - arrivedJob->arr;
+               pwait_time = turn_around_time - arrivedJob->bur;
+
+                printf("\nP%d : %d ms", arrivedJob->pid+1, pwait_time);
+                fprintf(out_fptr, "\nP%d : %d ms", arrivedJob->pid+1, pwait_time);
+                total_wait_time += pwait_time;
+                p_count++;
+
+                // Remove the selected process from the list
+                if (tempcurrent == arrivedJob)
+                {
+                    tempcurrent = tempcurrent->next;
+                }
+                else
+                {
+                    TEMP_LIST *prev = tempcurrent;
+                    while (prev->next != arrivedJob)
+                    {
+                        prev = prev->next;
+                    }
+                    prev->next = arrivedJob->next;
+                }
+            }
+            else
+            {
+                // No process has arrived yet, move to the next one
+                comp_time = tempcurrent->arr;
+            }
+        }       
+
+        avg_wait_time = total_wait_time / p_count;
+        printf("\nAverage waiting time: %.2f ms\n", avg_wait_time);
+        fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
+        fclose(out_fptr);
+        deleteListContent(temphead);
+
+        printf("\n\nMain List FCFS execution");
+        for(current=head;current;current=current->next){
+         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
+        }
 
    } else{
       //Run code for preemptive mode for FCFS
-      //Run code for none preemptive mode for FCFS
       
       printf("\nScheduling Method: First Come First Serve - Preemptive\n");
       fprintf(out_fptr, "\nScheduling Method: First Come First Serve - Preemptive\n");
@@ -297,33 +309,74 @@ void FCFS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
 
-      //First sorting by PID to rearrange the list to it's original form
-      bubbleSortpid(&head, linecnt);
-
-      //Then sorting by arrival time to always protect the accuracy of the simulator
-      bubbleSortarr(&head,linecnt);
+      //Sorting with respect to arrival time
+        bubbleSortarr(&temphead,linecnt);
 
       //performing FCFS on each process
-      current = head;
-      while (current != NULL){     //Repeat until end of list       
-         comp_time = comp_time + current->bur; //Calculating the completion time for current process
-         turn_around_time = comp_time - current->arr; //Calculating the turn around time for current process
-         pwait_time = turn_around_time - current->bur; //Calculating the wait time for current process
-         printf("\nP%d: %d ms", current->pid+1,pwait_time); //Printing the process names(p1, p2, p3) with wait times
-         fprintf(out_fptr, "\nP%d: %d ms", current->pid+1,pwait_time);
+       tempcurrent = temphead;
+        while (tempcurrent != NULL)
+        {
+            TEMP_LIST *arrivedJob = NULL;
+            TEMP_LIST *tmp = tempcurrent;
 
-         total_wait_time = total_wait_time + pwait_time;
-         //printf("\n%d | %d | %d", bur,arr,prior);
-         p_count++;
-         current=current->next; //go to the next node and repeat
-      }
+            // Find the process that has arrived
+            while (tmp != NULL)
+            {
+               if(tmp->arr <= comp_time){
+                if (arrivedJob == NULL)
+                {
+                    arrivedJob = tmp;
+                }
+                
+                }
+                tmp = tmp->next;
+            }
 
-      avg_wait_time = total_wait_time/p_count;
-      printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-      fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-      fclose(out_fptr);
+            if (arrivedJob != NULL)
+            {
+               //calculating process wait time
+               comp_time = comp_time + arrivedJob->bur;
+               turn_around_time = comp_time - arrivedJob->arr;
+               pwait_time = turn_around_time - arrivedJob->bur;
+
+                printf("\nP%d : %d ms", arrivedJob->pid+1, pwait_time);
+                fprintf(out_fptr, "\nP%d : %d ms", arrivedJob->pid+1, pwait_time);
+                total_wait_time += pwait_time;
+                p_count++;
+
+                // Remove the selected process from the list
+                if (tempcurrent == arrivedJob)
+                {
+                    tempcurrent = tempcurrent->next;
+                }
+                else
+                {
+                    TEMP_LIST *prev = tempcurrent;
+                    while (prev->next != arrivedJob)
+                    {
+                        prev = prev->next;
+                    }
+                    prev->next = arrivedJob->next;
+                }
+            }
+            else
+            {
+                // No process has arrived yet, move to the next one
+                comp_time = tempcurrent->arr;
+            }
+        }       
+
+        avg_wait_time = total_wait_time / p_count;
+        printf("\nAverage waiting time: %.2f ms\n", avg_wait_time);
+        fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
+        fclose(out_fptr);
+        deleteListContent(temphead);
+
+        printf("\n\nMain List FCFS execution");
+        for(current=head;current;current=current->next){
+         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
+        }
    }
-}
 }
 
 void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath)
@@ -336,35 +389,57 @@ void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath)
    float avg_wait_time = 0.0;   
    int p_count=0;
 
-    if (head == NULL)
-    {
-        printf("Please check if the input file is empty");
-    }
-    else
-    {
         out_fptr =  fopen(OutputPath, "a");
+        TEMP_LIST *tempcurrent, *temphead, *node;
+         temphead = tempcurrent = NULL;
+         int p_id = 0;
+
+         for(current = head; current ; current=current->next){ 
+         
+         node = malloc(sizeof(TEMP_LIST));
+         node->bur = current->bur;
+         node->arr = current->arr;
+         node->prior = current->prior;
+         node->rem_time = current->rem_time;
+         node->pid = p_id;
+
+         node->next =NULL;
+        if(temphead == NULL){
+            tempcurrent = temphead = node;
+        } else {
+            tempcurrent = tempcurrent->next = node;
+        }
+        p_id++;
+         }
+
+
+        if (strcmp(mode_choice, "OFF") == 0){
+
         //Sorting with respect to arrival time
-        bubbleSortarr(&head,linecnt);        
+        bubbleSortarr(&temphead,linecnt);
         
         printf("\nScheduling method: Shortest Job First. Non-Preemptive\n");
         printf("Process waiting times:");
         fprintf(out_fptr, "\nScheduling method: Shortest Job First. Non-Preemptive\n");
         fprintf(out_fptr, "Process waiting times:");
         
-         current = head;
-        while (current != NULL)
+         tempcurrent = temphead;         
+        while (tempcurrent != NULL)
         {
-            BUR_LIST *shortestJob = NULL;
-            BUR_LIST *temp2 = current;
+            TEMP_LIST *shortestJob = NULL;
+            TEMP_LIST *tmp = tempcurrent;
 
             // Find the process with the shortest burst time that has arrived
-            while (temp2 != NULL && temp2->arr <= comp_time)
+            while (tmp != NULL)
             {
-                if (shortestJob == NULL || temp2->bur < shortestJob->bur)
+               if(tmp->arr <= comp_time){
+                if (shortestJob == NULL || tmp->bur < shortestJob->bur)
                 {
-                    shortestJob = temp2;
+                    shortestJob = tmp;
                 }
-                temp2 = temp2->next;
+                }
+                tmp = tmp->next;
+            
             }
 
             if (shortestJob != NULL)
@@ -376,17 +451,17 @@ void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath)
 
                 printf("\nP%d : %d ms", shortestJob->pid+1, pwait_time);
                 fprintf(out_fptr, "\nP%d : %d ms", shortestJob->pid+1, pwait_time);
-                total_wait_time = total_wait_time + pwait_time;
-                p_count++;
+                total_wait_time += pwait_time;
+                p_count++;              
 
                 // Remove the selected process from the list
-                if (current == shortestJob)
+                if (tempcurrent == shortestJob)
                 {
-                    current = current->next;
+                    tempcurrent = tempcurrent->next;
                 }
                 else
                 {
-                    BUR_LIST *prev = current;
+                    TEMP_LIST *prev = tempcurrent;
                     while (prev->next != shortestJob)
                     {
                         prev = prev->next;
@@ -397,91 +472,145 @@ void SJF_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath)
             else
             {
                 // No process has arrived yet, move to the next one
-                comp_time = current->arr;
+                comp_time = tempcurrent->arr;
             }
         }
 
         avg_wait_time = total_wait_time / p_count;
         printf("\nAverage waiting time: %.2f ms\n", avg_wait_time);
         fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
-        fclose(out_fptr);
+
+        deleteListContent(temphead);
+
+        printf("\n\nMain List After SJF execution");
+        for(current=head;current;current=current->next){
+         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
+        }
+
+        printf("\n\nTemp List After SJF execution");
+        for(tempcurrent=temphead;tempcurrent;tempcurrent=tempcurrent->next){
+         printf("\n%d -- %d -- %d", tempcurrent->bur, tempcurrent->arr, tempcurrent->prior);
+        }
+        
+   } else{
+         printf("Shortest Job First Preemptive Code Segment");
    }
+   fclose(out_fptr);
 }
 
 void PS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
-   
-   int p_count=0;
    int wait_time = 0;
    int pwait_time = 0;
    int comp_time = 0;
-   int clock = 0;
    int turn_around_time = 0;
    float total_wait_time = 0.0;
-   float avg_wait_time = 0.0;
+   float avg_wait_time = 0.0;   
+   int p_count=0;
 
-   if (head == NULL)
-    {
-        printf("Please check if the input file is empty");
-    }
-    else
-    {
-
-   if (strcmp(mode_choice, "OFF") == 0){
-      //Run code for none preemptive mode for PS
       out_fptr =  fopen(OutputPath, "a");
+      TEMP_LIST *tempcurrent, *temphead, *node;
+          temphead = tempcurrent = NULL;
+         int p_id = 0;
 
+         for(current = head; current ; current=current->next){ 
+         
+         node = malloc(sizeof(TEMP_LIST));
+         node->bur = current->bur;
+         node->arr = current->arr;
+         node->prior = current->prior;
+         node->rem_time = current->rem_time;
+         node->pid = p_id;
+
+         node->next =NULL;
+        if(temphead == NULL){
+            tempcurrent = temphead = node;
+        } else {
+            tempcurrent = tempcurrent->next = node;
+        }
+        p_id++;
+         }
+
+      if (strcmp(mode_choice, "OFF") == 0){
       printf("\nScheduling Method: Priority Scheduling - Non Preemptive\n");
       fprintf(out_fptr, "\nScheduling Method: Priority Scheduling - Non Preemptive\n");
 
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
-      //Run code for none preemptive mode for SJF
 
-      //perform sorting operation
-      bubbleSortpid(&head, linecnt);
       
-      bubbleSortprior(&head, linecnt);
-      moveZeroToFront(&head, linecnt);
+        //Sorting with respect to arrival time
+        bubbleSortarr(&temphead,linecnt);
+        
+        tempcurrent = temphead;
+        while (tempcurrent != NULL)
+        {
+            TEMP_LIST *arrivedJob = NULL;
+            TEMP_LIST *tmp = tempcurrent;
 
-      // printf("After Sorting: ");
-      // current = head;
-      // while(current){
-      // printf("\nP%d --- %d | %d | %d", current->pid+1,current->bur,current->arr,current->prior);
-      // current=current->next;
-      // }
-      
-      //After Arrival Condition met
-      current = head;
-      while(current){
-      
-      if (current->arr <= clock) {
-      //Calculating wait times      
-      pwait_time = clock - current->arr; //Calculating the wait time for current process
-      printf("\nP%d: %d ms", current->pid+1,pwait_time); //Printing the process names with wait times
-      fprintf(out_fptr, "\nP%d: %d ms", current->pid+1,pwait_time);
+            // Find the process with the most priority time that has arrived
+            while (tmp != NULL && tmp->arr <= comp_time)
+            {
+                if (arrivedJob == NULL || tmp->prior < arrivedJob->prior)
+                {
+                    arrivedJob = tmp;
+                }
+                tmp = tmp->next;
+            }
 
-      total_wait_time = total_wait_time + pwait_time;
-      clock+= current->bur;
+            if (arrivedJob != NULL)
+            {
+               //calculating completion time
+               comp_time = comp_time + arrivedJob->bur;
+               turn_around_time = comp_time - arrivedJob->arr;
+               pwait_time = turn_around_time - arrivedJob->bur;
 
-      p_count++; //counting the number of processes
-      current=current->next;
-      }else {
-            // Process hasn't arrived yet, wait for it
-            clock++;
+                printf("\nP%d : %d ms", arrivedJob->pid+1, pwait_time);
+                fprintf(out_fptr, "\nP%d : %d ms", arrivedJob->pid+1, pwait_time);
+                total_wait_time = total_wait_time + pwait_time;
+                p_count++;
+
+                // Remove the selected process from the list
+                if (tempcurrent == arrivedJob)
+                {
+                    tempcurrent = tempcurrent->next;
+                }
+                else
+                {
+                    TEMP_LIST *prev = tempcurrent;
+                    while (prev->next != arrivedJob)
+                    {
+                        prev = prev->next;
+                    }
+                    prev->next = arrivedJob->next;
+                }
+            }
+            else
+            {
+                // No process has arrived yet, move to the next one
+                comp_time = tempcurrent->arr;
+            }
+        }
+        
+
+        avg_wait_time = total_wait_time / p_count;
+        printf("\nAverage waiting time: %.2f ms\n", avg_wait_time);
+        fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
+        deleteListContent(temphead);
+
+         printf("\n\nMain List After PS execution");
+        for(current=head;current;current=current->next){
+         printf("\n%d -- %d -- %d", current->bur, current->arr, current->prior);
         }
 
-    }
-     
-      avg_wait_time = total_wait_time/p_count; 
-      printf("\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-      fprintf(out_fptr, "\nAverage Wait Time: %.2f ms\n", avg_wait_time);
-      
-      fclose(out_fptr);
+        printf("\n\nTemp List After PS execution");
+        for(tempcurrent=temphead;tempcurrent;tempcurrent=tempcurrent->next){
+         printf("\n%d -- %d -- %d", tempcurrent->bur, tempcurrent->arr, tempcurrent->prior);
+        }
    } else{
-      //Run code for preemptive mode for PS
-      printf("Priority scheduling Preemptive Code segment");
+         printf("Priority Scheduling Preemptive Code Segment");
+
    }
-}
+   fclose(out_fptr);
 }
 
 void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
@@ -497,6 +626,29 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
 
    out_fptr =  fopen(OutputPath, "a");
 
+   TEMP_LIST *tempcurrent, *temphead, *node;
+          temphead = tempcurrent = NULL;
+         int p_id = 0;
+
+         for(current = head; current ; current=current->next){ 
+         
+         node = malloc(sizeof(TEMP_LIST));
+         node->bur = current->bur;
+         node->arr = current->arr;
+         node->prior = current->prior;
+         node->rem_time = current->rem_time;
+         node->pid = p_id;
+
+         node->next =NULL;
+        if(temphead == NULL){
+            tempcurrent = temphead = node;
+        } else {
+            tempcurrent = tempcurrent->next = node;
+        }
+        p_id++;
+         }
+
+
    if (strcmp(mode_choice, "OFF") == 0){
       //Run code for none preemptive mode for RRS
 
@@ -507,30 +659,32 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
       fprintf(out_fptr, "Process Waiting Times:");
 
       //Then sorting by arrival time for Round Robin Scheduling
-      bubbleSortarr(&head,linecnt);
+      
+        //Sorting with respect to arrival time
+        bubbleSortarr(&temphead,linecnt);
 
       //initializing number of remaining processes to be the current number of processes
       rem_process = linecnt;
 
          while(rem_process!=0){
-         for(current=head; current; current->next){
+         for(tempcurrent=temphead; tempcurrent; tempcurrent->next){
             
-         if(current->rem_time <= time_quan && current->rem_time > 0){   //if the remaining time of current process is less than the time quantum and greater than 0
-            comp_time +=current->rem_time;
-            current->rem_time = 0;
+         if(tempcurrent->rem_time <= time_quan && tempcurrent->rem_time > 0){   //if the remaining time of current process is less than the time quantum and greater than 0
+            comp_time +=tempcurrent->rem_time;
+            tempcurrent->rem_time = 0;
             flag = 1;
-         } else if(current->rem_time > 0) { //if remaining time is only greater than 0 and still needs execution
-            current->rem_time -= time_quan;
+         } else if(tempcurrent->rem_time > 0) { //if remaining time is only greater than 0 and still needs execution
+            tempcurrent->rem_time -= time_quan;
             comp_time += time_quan;
          } 
          
-         if(current->rem_time == 0 && flag ==1){   //If process has truely ended
+         if(tempcurrent->rem_time == 0 && flag ==1){   //If process has truely ended
             rem_process--;
-            turn_around_time = comp_time - current->arr;
-            pwait_time = turn_around_time - current->bur; //Calculate process wait time
+            turn_around_time = comp_time - tempcurrent->arr;
+            pwait_time = turn_around_time - tempcurrent->bur; //Calculate process wait time
 
-            printf("\nP%d : %d ms", current->pid+1, pwait_time);
-            fprintf(out_fptr, "\nP%d : %d ms", current->pid+1, pwait_time);
+            printf("\nP%d : %d ms", tempcurrent->pid+1, pwait_time);
+            fprintf(out_fptr, "\nP%d : %d ms", tempcurrent->pid+1, pwait_time);
 
             total_wait_time+= pwait_time;
             
@@ -538,7 +692,7 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
             p_count++;
          }
          else{           
-            current = current->next; 
+            tempcurrent = tempcurrent->next; 
          }
                 
          }
@@ -548,41 +702,42 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
       avg_wait_time = total_wait_time / p_count;
       printf("\nAverage waiting time: %.2f ms\n", avg_wait_time);
       fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
+      deleteListContent(temphead);
 
    } else{
       //Run code for preemptive mode for RRS
-        
+
       printf("\nScheduling Method: Round Robin Scheduling - Preemptive - Time Quantum = %d\n",time_quan);
       fprintf(out_fptr, "\nScheduling Method: Round Robin Scheduling - Preemptive - Time Quantum = %d\n",time_quan);
 
       printf("Process Waiting Times:");
       fprintf(out_fptr, "Process Waiting Times:");
 
-      //Then sorting by arrival time for Round Robin Scheduling
-      bubbleSortarr(&head,linecnt);
+       //Sorting with respect to arrival time
+        bubbleSortarr(&temphead,linecnt);
 
       //initializing number of remaining processes to be the current number of processes
       rem_process = linecnt;
 
          while(rem_process!=0){
-         for(current=head; current; current->next){
+         for(tempcurrent=temphead; tempcurrent; tempcurrent->next){
             
-         if(current->rem_time <= time_quan && current->rem_time > 0){   //if the remaining time of current process is less than the time quantum and greater than 0
-            comp_time +=current->rem_time;
-            current->rem_time = 0;
+         if(tempcurrent->rem_time <= time_quan && tempcurrent->rem_time > 0){   //if the remaining time of current process is less than the time quantum and greater than 0
+            comp_time +=tempcurrent->rem_time;
+            tempcurrent->rem_time = 0;
             flag = 1;
-         } else if(current->rem_time > 0) { //if remaining time is only greater than 0 and still needs execution
-            current->rem_time -= time_quan;
+         } else if(tempcurrent->rem_time > 0) { //if remaining time is only greater than 0 and still needs execution
+            tempcurrent->rem_time -= time_quan;
             comp_time += time_quan;
          } 
          
-         if(current->rem_time == 0 && flag ==1){   //If process has truely ended
+         if(tempcurrent->rem_time == 0 && flag ==1){   //If process has truely ended
             rem_process--;
-            turn_around_time = comp_time - current->arr;
-            pwait_time = turn_around_time - current->bur; //Calculate process wait time
+            turn_around_time = comp_time - tempcurrent->arr;
+            pwait_time = turn_around_time - tempcurrent->bur; //Calculate process wait time
 
-            printf("\nP%d : %d ms", current->pid+1, pwait_time);
-            fprintf(out_fptr, "\nP%d : %d ms", current->pid+1, pwait_time);
+            printf("\nP%d : %d ms", tempcurrent->pid+1, pwait_time);
+            fprintf(out_fptr, "\nP%d : %d ms", tempcurrent->pid+1, pwait_time);
 
             total_wait_time+= pwait_time;
             
@@ -590,7 +745,7 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
             p_count++;
          }
          else{           
-            current = current->next; 
+            tempcurrent = tempcurrent->next; 
          }
                 
          }
@@ -600,9 +755,9 @@ void RRS_sch(BUR_LIST *current, BUR_LIST *head, const char *OutputPath){
       avg_wait_time = total_wait_time / p_count;
       printf("\nAverage waiting time: %.2f ms\n", avg_wait_time);
       fprintf(out_fptr, "\nAverage waiting time: %.2f ms\n", avg_wait_time);
-      fclose(out_fptr);
-
+      deleteListContent(temphead);
    }
+   fclose(out_fptr);
 }
 
 void menu(BUR_LIST *current, BUR_LIST *head, const char *OutPath){
@@ -710,15 +865,9 @@ void menu(BUR_LIST *current, BUR_LIST *head, const char *OutPath){
             }
             menu(current, head, OutPath);
 
-      } else if(menu_option == 4){
-            printf("Do you want to end the program? (y/n): ");
-            char exit_option;
-            
-            scanf(" %c", &exit_option);  
-            if(exit_option == 'y' || exit_option == 'Y') {
+      } else if(menu_option == 4){            
                //Print the content of Output.txt to the screen here
                inp_fptr = fopen(OutPath, "r");
-
 
                while(fgets(myString, sizeof(myString), inp_fptr)){
                   printf("%s", myString);
@@ -727,19 +876,15 @@ void menu(BUR_LIST *current, BUR_LIST *head, const char *OutPath){
                fclose(inp_fptr);
 
                printf("\nProgram ended\n");
-               exit(1);
-            } else if (exit_option == 'n' || exit_option == 'N'){
-               menu(current, head, OutPath);
-            } else{
-               printf("\nPlease input the correct option\n");
-               menu(current, head, OutPath);
-            }
+               exit(1);            
+            
       } else{
             fprintf(stderr, "Please select the correct option\n");
             exit(1);
          
       }
 }
+
 int main(int argc, char *argv[]) 
 //argc is the number of arguments, 1 by default if no arguments are passed
 //argv is a pointer to an array of strings
